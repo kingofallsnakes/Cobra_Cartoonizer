@@ -21,10 +21,10 @@ class Cartoonizer:
         img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
         img_blur = cv2.medianBlur(img_gray, 3)
         img_edge = cv2.adaptiveThreshold(img_blur, 255,
-                                          cv2.ADAPTIVE_THRESH_MEAN_C,
-                                          cv2.THRESH_BINARY, 9, 2)
+                                         cv2.ADAPTIVE_THRESH_MEAN_C,
+                                         cv2.THRESH_BINARY, 9, 2)
         img_edge = cv2.cvtColor(cv2.resize(img_edge, (img_color.shape[1], img_color.shape[0])),
-                                 cv2.COLOR_GRAY2RGB)
+                                cv2.COLOR_GRAY2RGB)
         return cv2.bitwise_and(img_color, img_edge)
 
 class App:
@@ -46,7 +46,7 @@ class App:
         self.label = Label(self.frame, text="Select an image to cartoonify:", font=("Helvetica", 16, "bold"),
                            fg="#ffffff", bg="#444b55", anchor="w")
         self.instructions_label = Label(self.frame, text="Choose a filter and adjust settings before applying.",
-                                         font=("Helvetica", 12), fg="#ffffff", bg="#444b55", anchor="w")
+                                        font=("Helvetica", 12), fg="#ffffff", bg="#444b55", anchor="w")
         self.select_button = Button(self.frame, text="Select Image", command=self.select_image,
                                     bg="#4CAF50", fg="white", font=("Helvetica", 12, "bold"), width=12)
         self.process_button = Button(self.frame, text="Apply Filter", command=self.apply_filter,
@@ -64,8 +64,13 @@ class App:
         self.select_button.grid(row=1, column=0, padx=10, pady=(10, 0))
         self.filter_var = StringVar(self.root)
         self.filter_var.set("Cartoon")
-        self.filters = ["Cartoon", "Sketch", "Pencil", "Color Filter", "Grayscale", "Blur", "Edge Detection",
-                        "Sepia", "Negative", "Emboss"]
+        self.filters = [
+            "Cartoon", "Sketch", "Pencil", "Color Filter", "Grayscale", "Blur", "Edge Detection", 
+            "Sepia", "Negative", "Emboss", "Sharpen", "Posterize", "Pencil Sketch", "HDR", 
+            "Pixelate", "Bilateral Filter", "Stylization", "Pencil Color", "Motion Blur", 
+            "Median Blur", "Canny", "Gaussian Blur", 
+            "Brighten", "Darken", "Inverse", "Saturation Boost", "Color Swap", "Solarize"
+        ]
         self.filter_menu = OptionMenu(self.frame, self.filter_var, *self.filters)
         self.filter_menu.config(bg="#2196F3", fg="white", font=("Helvetica", 12, "bold"), width=12)
         self.filter_menu.grid(row=1, column=1, padx=10, pady=(10, 0))
@@ -82,6 +87,7 @@ class App:
             self.display_image(cv2.imread(self.image_path))
 
     def display_image(self, image):
+        self.preview_canvas.delete("all")  # Clear previous image
         try:
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             image_resized = self.resize_image(image_rgb)
@@ -90,7 +96,7 @@ class App:
             self.preview_canvas.create_image(0, 0, anchor="nw", image=self.preview_image_tk)
             self.preview_canvas.image = self.preview_image_tk
         except Exception as e:
-            messagebox.showerror("Display Error", f"Could not display the image. Error: {e}")
+            messagebox.showerror("Display Error", "Could not display the image properly.")
 
     def resize_image(self, image):
         max_size = 750
@@ -115,7 +121,7 @@ class App:
             self.display_image(filtered_img)
             self.status_label.config(text="Filter applied successfully!")
         except Exception as e:
-            messagebox.showerror("Processing Error", f"Could not apply the filter. Error: {e}")
+            messagebox.showerror("Processing Error", "An error occurred while applying the filter.")
 
     def apply_selected_filter(self, image, filter_name):
         filters_map = {
@@ -126,29 +132,46 @@ class App:
             "Blur": lambda img: cv2.GaussianBlur(img, (15, 15), 0),
             "Edge Detection": lambda img: cv2.Canny(img, 100, 200),
             "Sepia": lambda img: cv2.transform(img, np.array([[0.272, 0.534, 0.131],
-                                                               [0.349, 0.686, 0.168],
-                                                               [0.393, 0.769, 0.189]])),
+                                                              [0.349, 0.686, 0.168],
+                                                              [0.393, 0.769, 0.189]])),
             "Negative": lambda img: cv2.bitwise_not(img),
-            "Emboss": lambda img: cv2.filter2D(img, -1, np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]]))
+            "Emboss": lambda img: cv2.filter2D(img, -1, np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])),
+            "Sharpen": lambda img: cv2.filter2D(img, -1, np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])),
+            "Posterize": lambda img: cv2.convertScaleAbs(img, alpha=0.5, beta=50),
+            "Pencil Sketch": lambda img: cv2.pencilSketch(img, sigma_s=60, sigma_r=0.07, shade_factor=0.1)[0],
+            "HDR": lambda img: cv2.detailEnhance(img, sigma_s=12, sigma_r=0.15),
+            "Pixelate": lambda img: cv2.resize(cv2.resize(img, (32, 32)), (img.shape[1], img.shape[0])),
+            "Bilateral Filter": lambda img: cv2.bilateralFilter(img, 9, 75, 75),
+            "Stylization": lambda img: cv2.stylization(img, sigma_s=60, sigma_r=0.07),
+            "Pencil Color": lambda img: cv2.pencilSketch(img, sigma_s=60, sigma_r=0.07, shade_factor=0.1)[1],
+            "Motion Blur": lambda img: cv2.blur(img, (25, 1)),
+            "Median Blur": lambda img: cv2.medianBlur(img, 15),
+            "Canny": lambda img: cv2.Canny(img, 100, 200),
+            "Gaussian Blur": lambda img: cv2.GaussianBlur(img, (15, 15), 0),
+            "Brighten": lambda img: cv2.convertScaleAbs(img, alpha=1.2, beta=30),
+            "Darken": lambda img: cv2.convertScaleAbs(img, alpha=0.8, beta=-30),
+            "Inverse": lambda img: cv2.bitwise_not(img),
+            "Saturation Boost": lambda img: cv2.convertScaleAbs(img, alpha=1.5, beta=20),
+            "Color Swap": lambda img: cv2.cvtColor(img, cv2.COLOR_BGR2RGB),
+            "Solarize": lambda img: cv2.threshold(img, 128, 255, cv2.THRESH_BINARY_INV)[1]
         }
-        return filters_map.get(filter_name, lambda img: img)(image)
-
-    def save_image(self):
-        if not getattr(self, 'image_path', None):
-            messagebox.showwarning("No Image", "Please select an image first.")
-            return
-
-        save_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png"), 
-                                                                                   ("JPEG files", "*.jpg")])
-        if save_path:
-            cv2.imwrite(save_path, cv2.cvtColor(np.array(self.preview_image), cv2.COLOR_RGB2BGR))
-            messagebox.showinfo("Save Successful", f"Image saved to: {save_path}")
+        return filters_map.get(filter_name, lambda x: x)(image)
 
     def reset(self):
-        self.image_path = None
         self.preview_canvas.delete("all")
-        self.status_label.config(text="Select an image to start.")
-        self.filter_var.set("Cartoon")
+        self.status_label.config(text="Settings reset")
+        self.cartoonizer.down_samples = 2
+        self.cartoonizer.bilateral_filters = 50
+
+    def save_image(self):
+        if not getattr(self, 'preview_image', None):
+            messagebox.showwarning("No Image", "No image to save. Please apply a filter first.")
+            return
+        save_path = filedialog.asksaveasfilename(defaultextension=".png",
+                                                 filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg")])
+        if save_path:
+            self.preview_image.save(save_path)
+            messagebox.showinfo("Image Saved", f"Image saved to {save_path}")
 
 if __name__ == "__main__":
     root = Tk()
