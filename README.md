@@ -6,16 +6,35 @@ Cobra Cartoonizer is a Python-based application that allows users to apply vario
 
 - **Image Selection**: Users can select images from their file system.
 - **Filter Options**: Apply a variety of filters, including:
-  - Cartoon
-  - Sketch
-  - Pencil
-  - Color Filter
-  - Grayscale
-  - Blur
-  - Edge Detection
-  - Sepia
-  - Negative
-  - Emboss
+- Cartoon
+- Sketch
+- Pencil
+- Color Filter
+- Grayscale
+- Blur
+- Edge Detection
+- Sepia
+- Negative
+- Emboss
+- Sharpen
+- Posterization
+- Pencil Sketch
+- HDR
+- Pixelate
+- Bilateral Filter
+- Stylization
+- Pencil Color
+- Motion Blur
+- Median Blur
+- Canny
+- Gaussian Blur
+- Brighten
+- Darken
+- Inverse
+- Saturation Boost
+- Color Swap
+- Solarize
+
 - **Image Preview**: Preview the selected image and the applied filter.
 - **Image Saving**: Save the processed image in PNG or JPEG formats.
 - **Reset Functionality**: Clear the selected image and reset settings.
